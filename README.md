@@ -1,4 +1,4 @@
-# sonarqubedeploy
+# Automated SonarQube installation scripts
 Automation around sonarqube deployment. Vagrantfile + ansible provisioning
 to easily deploy a Vagrant system for local use.
 
