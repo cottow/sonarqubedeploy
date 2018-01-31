@@ -1,0 +1,20 @@
+- name: install python2
+  raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
+
+- name: apt full-upgrade
+  apt:
+    update_cache: yes
+    upgrade: dist
+
+- name: change homedir permissions
+  shell: chmod 750 /home/*
+
+- name: change /vagrant permissions
+  shell: find /vagrant -path /vagrant/www -prune -o -exec chmod o-rwx {} \; && chmod 755 /vagrant
+
+- name: change default adduser directory permissions
+  lineinfile:
+    path: /etc/adduser.conf
+    regexp: '^DIR_MODE=0755$'
+    line: 'DIR_MODE=750'
+    backrefs: yes

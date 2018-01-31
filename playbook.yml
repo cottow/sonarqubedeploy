@@ -1,0 +1,14 @@
+---
+- hosts: all
+  become: true
+  gather_facts: false
+  vars:
+    psql_passwd: le sonar says ping
+    sonar_version: 6.7.1
+  roles:
+    - base
+    - java
+    - postgres
+    - sonarqube
+    - proxy
+

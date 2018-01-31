@@ -1,0 +1,81 @@
+---
+- name: Install unzip
+  apt: name=unzip state=latest
+
+- name: Download sonarqube
+  get_url:
+    url: https://sonarsource.bintray.com/Distribution/sonarqube/sonarqube-{{ sonar_version }}.zip
+    dest: /tmp/sonarqube-{{ sonar_version }}.zip
+
+- name: Unarchive sonarqube
+  unarchive:
+    remote_src: yes
+    src: https://sonarsource.bintray.com/Distribution/sonarqube/sonarqube-{{ sonar_version }}.zip
+    dest: /opt
+
+- name: Check for existing sonarqube directory
+  stat: path=/opt/sonarqube
+  register: sonar_stat
+
+- name: Check for existing sonarqube backup directory
+  stat: path=/opt/sonarqube.old
+  register: sonar_bak
+
+- name: Check for sonarqube directory
+  stat: path=/opt/sonarqube-{{ sonar_version }}
+  register: sonar_unzip_stat
+
+- name: Remove old backup of sonarqube directory
+  command: rm -rf /opt/sonarqube.old
+  when: sonar_bak.stat.exists
+
+- name: Backup and remove current sonarqube directory
+  command: mv /opt/sonarqube /opt/sonarqube.old
+  when: sonar_stat.stat.exists
+
+- name: Rename unpacked sonarqube dir to /opt/sonarqube
+  command: mv /opt/sonarqube-{{ sonar_version }} /opt/sonarqube
+  when: sonar_unzip_stat.stat.exists
+
+- name: Install configuration file
+  template:
+    src: sonar.properties
+    dest: /opt/sonarqube/conf/sonar.properties
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Install sonar systemd service file
+  template:
+    src: sonar.service
+    dest: /etc/systemd/system/sonar.service
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Add group for sonar
+  group:
+    name: sonar
+
+- name: Add user for sonar
+  user:
+    name: sonar
+    group: sonar
+
+- name: Install start script
+  template:
+    src: sonar.sh
+    dest: /opt/sonarqube/bin/linux-x86-64/sonar.sh
+    mode: 0755
+    owner: sonar
+    group: sonar
+
+- name: Change ownership of sonar files to sonar
+  command: chown -R sonar:sonar /opt/sonarqube
+
+- name: Enable and start sonar
+  systemd:
+    name: sonar
+    enabled: yes
+    state: started
+

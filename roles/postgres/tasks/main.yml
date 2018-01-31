@@ -1,0 +1,40 @@
+---
+- name: Install postgresql and tools
+  apt: name={{ item }} state=latest
+  with_items:
+    - postgresql
+    - postgresql-contrib
+    - pwgen
+    - whois
+    - python-psycopg2
+
+- name: Enable & start postgresql
+  systemd:
+    name: postgresql
+    enabled: yes
+    state: started
+
+- name: Hash the postgres password with unique salt
+  shell: echo -n "{{ psql_passwd|quote }}" | mkpasswd -s -5
+  register: psql_hash
+
+- name: Set postgresql password
+  user:
+    name: postgres
+    password: "{{ psql_hash.stdout }}"
+
+- name: Create sonar DB
+  become: true
+  become_user: postgres
+  postgresql_db:
+    name: sonar
+
+- name: Create sonar postgresql user
+  become: true
+  become_user: postgres
+  postgresql_user:
+    db: sonar
+    name: sonar
+    password: "{{ psql_passwd }}"
+
+

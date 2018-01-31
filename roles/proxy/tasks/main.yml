@@ -1,0 +1,27 @@
+---
+- name: Install apache2
+  apt: 
+    name: apache2 
+    state: present
+    update_cache: yes
+
+- name: Enable modules
+  command: a2enmod {{ item }}
+  with_items:
+    - proxy
+    - proxy_http
+
+- name: Install apache2 config
+  template: 
+    src: 000-default.conf
+    dest: /etc/apache2/sites-available/000-default.conf
+
+- name: Enable apache2
+  systemd:
+    name: apache2
+    enabled: yes
+    state: started
+
+- name: Restart apache2
+  command: apache2ctl graceful
+
